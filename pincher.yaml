@@ -1,0 +1,16 @@
+dynamixels: {}
+joints: {
+    arm_wrist_joint: {id: 4, min_angle: -90, max_angle: 90, max_speed: 50.0},
+    arm_elbow_joint: {id: 3, min_angle: -137, max_angle: 137, max_speed: 50.0},
+    arm_shoulder_joint: {id: 2, min_angle: -120, max_angle: 120, max_speed: 50.0},
+    base_rot_joint: {id: 1, min_angle: -180, max_angle: 180, max_speed: 50.0}
+}
+controllers: {
+  arm_controller: {
+    type: follow_controller,
+    joints: [base_rot_joint, arm_shoulder_joint, arm_elbow_joint, arm_wrist_joint],
+    action_name: arm_controller/follow_joint_trajectory,
+    onboard: false
+  }
+}
+write_rate: 30

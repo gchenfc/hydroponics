@@ -1,0 +1,5 @@
+<launch>
+  <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
+    <rosparam file="/home/gerry/catkin_ws/src/pincher_test/pincher.yaml" command="load" />
+  </node>
+</launch>
