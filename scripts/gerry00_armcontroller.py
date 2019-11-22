@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
@@ -123,7 +124,7 @@ def main():
             allTXY.append([theta, x, y, fo_y])
         is_up = not is_up
 
-    np.save(configpath+'configurations', np.array(allTXY))
+    # np.save(configpath+'configurations', np.array(allTXY))
 
     while not rospy.is_shutdown() and index < len(allTXY):
         txy = allTXY[index]
