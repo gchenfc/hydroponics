@@ -6,6 +6,7 @@ import rospy
 import math
 import actionlib
 import numpy as np
+import rpi_ssh_controller
 
 joint_names = ['base_rot_joint',
                'arm_shoulder_joint',
@@ -20,8 +21,11 @@ relaxers = []
 index = 0
 setpoint = [0]*len(joint_names)
 
+ssh = 0
+
 def init():
-    global publishers, relaxers
+    global publishers, relaxers, ssh
+    ssh = rpi_ssh_controller.init()
     for name in joint_names:
         publishers.append(
             rospy.Publisher(name+'/command', Float64, queue_size=5)
@@ -44,11 +48,12 @@ def check_joint_state(data):
         except ValueError:
             print("%s %s" % (data.name, joint_names[i]))
             return
-        if abs(curpoint[curpoint_index] - setpoint[i]) > 0.04:
+        if abs(curpoint[curpoint_index] - setpoint[i]) > 0.05:
             print('%s has error %f' %
                 (joint_names[i], abs(curpoint[curpoint_index] - setpoint[i])))
             return
     global index, setpoint
+    rpi_ssh_controller.takeImage(ssh, 'Desktop/data2/test_%d.jpg'%index)
     index = index + 1
     setpoint = []
 
@@ -89,6 +94,9 @@ def go_to_q(q):
 
 def relax_all():
     global relaxers
+    rospy.loginfo('shutdown routine')
+    rpi_ssh_controller.exit(ssh)
+    rospy.loginfo('closed ssh')
     for relaxer in relaxers:
         relaxer.call()
     rospy.loginfo('relaxed all servos')
@@ -97,22 +105,24 @@ def main():
     global setpoint
     rate = rospy.Rate(1) # 10hz
 
-    focus_y = 0.25
+    focus_y = 0.26
     allTXY = []
     is_up = True
     for theta in np.arange(-math.pi*5/6, math.pi*5/6, math.pi/12):
         for j in (range(6) if is_up else range(5,-1,-1)):
-            x = 0.075
-            y = focus_y - 0.10 + 0.10 * (j / 5.0)
+            y = focus_y - 0.10 + 0.07 * (j / 5.0)
+            fo_y = focus_y - 0.07 + 0.07 * (j / 5.0) + 0.025
+            # x = 0.14 - 0.03*(j/5.0)
+            x = 0.125
             # r = 0.05
             # x = r * math.cos(index / 10.0 - math.pi/2)
             # y = focus_y - r * math.sin(index / 10.0 - math.pi/2)
-            allTXY.append([theta, x, y])
+            allTXY.append([theta, x, y, fo_y])
         is_up = not is_up
 
     while not rospy.is_shutdown() and index < len(allTXY):
         txy = allTXY[index]
-        setpoint = ik(txy[0], txy[1], txy[2], focus_y=focus_y)
+        setpoint = ik(txy[0], txy[1], txy[2], focus_y=txy[3])
         hello_str = "going to position %f %f %f %f" % tuple(setpoint)
         rospy.loginfo(hello_str)
         go_to_q(setpoint)
