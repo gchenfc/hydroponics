@@ -8,6 +8,9 @@ import actionlib
 import numpy as np
 import rpi_ssh_controller
 
+datapath = 'Desktop/data2/'
+configpath = 'data/set00/'
+
 joint_names = ['base_rot_joint',
                'arm_shoulder_joint',
                'arm_elbow_joint',
@@ -53,7 +56,7 @@ def check_joint_state(data):
                 (joint_names[i], abs(curpoint[curpoint_index] - setpoint[i])))
             return
     global index, setpoint
-    rpi_ssh_controller.takeImage(ssh, 'Desktop/data2/test_%d.jpg'%index)
+    # rpi_ssh_controller.takeImage(ssh, datapath+'test_%d.jpg'%index)
     index = index + 1
     setpoint = []
 
@@ -119,6 +122,8 @@ def main():
             # y = focus_y - r * math.sin(index / 10.0 - math.pi/2)
             allTXY.append([theta, x, y, fo_y])
         is_up = not is_up
+
+    np.save(configpath+'configurations', np.array(allTXY))
 
     while not rospy.is_shutdown() and index < len(allTXY):
         txy = allTXY[index]
